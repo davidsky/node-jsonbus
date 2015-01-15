@@ -1,5 +1,5 @@
 #JSONbus
-Fast and simple json message passing over tcp
+Fast and simple JSON passing over TCP with auto reconnecting client.
 
 ## Usage: server
 .createServer() accepts Nodejs's default parameters.
