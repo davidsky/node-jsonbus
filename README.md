@@ -1,5 +1,5 @@
 #JSONbus
-Fast, simple request/response bus based on JSON.
+Fast and simple json message passing over tcp
 
 ## Usage: server
 .createServer() accepts Nodejs's default parameters.
@@ -27,7 +27,7 @@ client.request({ping: 1}, function(obj){
 
 ## Installation
 ```
-npm install octobus
+npm install jsonbus
 ```
 
 
