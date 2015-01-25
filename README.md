@@ -23,7 +23,7 @@ client.request({ping: 1}, function(obj){
 })
 ```
 > additionally .connect() can accept [reconnect](https://github.com/davidSky/node-net-socket-reconnect) options and {requestTimeout: 500}
-
+> on request timeout the callback will be called with undefined
 
 ## Installation
 ```
