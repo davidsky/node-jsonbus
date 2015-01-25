@@ -30,10 +30,6 @@ function Server()
 }
 exports.createServer= Server
 
-var errorRequestTimeout= new Error('timeout')
-var errorUnexpectedServerResponse= new Error('Unexpected server response')
-var errorClientStruct= new Error('Client (connect) must be initiated with one valid and existing structure name')
-
 function Connect()
 {
 	var socket= net.connect.apply(null, arguments)
