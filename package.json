@@ -1,11 +1,11 @@
 {
   "name": "jsonbus",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "fast and simple json message passing over tcp",
   "main": "index.js",
   "dependencies": {
-    "net-buffer": "^0.0.7",
-    "net-socket-reconnect": "^0.0.2"
+    "net-buffer": "latest",
+    "net-socket-reconnect": "latest"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
