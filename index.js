@@ -2,7 +2,7 @@
 
 var reconnect= require('net-socket-reconnect')
 var netBuf= require('net-buffer')
-// var net= require('net')
+var net= require('net')
 
 function Server()
 {
