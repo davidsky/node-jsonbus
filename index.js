@@ -1,8 +1,8 @@
 'use strict';
 
-require('net-socket-reconnect')
+var reconnect= require('net-socket-reconnect')
 var netBuf= require('net-buffer')
-var net= require('net')
+// var net= require('net')
 
 function Server()
 {
@@ -32,7 +32,7 @@ exports.createServer= Server
 
 function Connect()
 {
-	var socket= net.connect.apply(null, arguments)
+	var socket= reconnect.apply(null, arguments)
 
 	var requestTimeout= arguments.requestTimeout || 1000
 	var requestCount= 0
