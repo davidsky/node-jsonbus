@@ -34,7 +34,9 @@ function Connect()
 {
 	var socket= reconnect.apply(null, arguments)
 
-	var requestTimeout= arguments.requestTimeout || 1000
+	var requestTimeout= 1000
+	if (arguments && typeof arguments[0])
+		requestTimeout= arguments[0].requestTimeout || 1000
 	var requestCount= 0
 	var requestCallbacks= {}
 	var requestTimeouts= {}
