@@ -11,17 +11,17 @@ function Server()
 	{
 		socket.on('readable', netBuf.decode(socket, function(buffer)
 		{
-			var reqId= buffer.readUInt32LE(0)
+			var reqId= buffer.readUInt32BE(0)
+
 			// no reqId, no reply expected
 			if( 0===reqId )
-				return server.emit('request', JSON.parse(buffer.slice(4).toString()) )
+				return server.emit('request', JSON.parse(buffer.slice(6).toString()) )
 
-			return server.emit('request', JSON.parse(buffer.slice(4).toString()), function(obj)
+			return server.emit('request', JSON.parse(buffer.slice(6).toString()), function(obj)
 			{
-				var buffer= netBuf.encode(new Buffer(JSON.stringify(obj)), 4)
-				buffer.writeUInt32LE(reqId, 2)
+				var buffer= netBuf.encode(new Buffer(JSON.stringify(obj)), 6)
+				buffer.writeUInt32BE(reqId, 2)
 				socket.write(buffer)
-				reqId= null, buffer= null, obj= null
 			})
 		}))
 	})
@@ -30,68 +30,75 @@ function Server()
 }
 exports.createServer= Server
 
+var maxRequestCount= Math.pow(256, 4) - 1000
+
 function Connect()
 {
 	var socket= reconnect.apply(null, arguments)
 
-	var requestTimeout= 1000
-	if (arguments && arguments[0])
-		requestTimeout= arguments[0].requestTimeout || 1000
+	if( arguments && arguments[0] && typeof arguments[0].requestTimeout )
+		var requestTimeout= arguments[0].requestTimeout
+	else
+		var requestTimeout= 0
+
 	var requestCount= 0
 	var requestCallbacks= {}
 	var requestTimeouts= {}
 	var structConfirmed= undefined
+	
+	function onTimeout(reqId){
+		requestCallbacks[reqId].callback()
+		gc(reqId)
+	}
 
-	socket.request= function(obj, callback)
+	function gc(reqId){
+		requestCallbacks[reqId]= undefined
+	}
+	
+	socket.request= function(obj, options)
 	{
-		var reqId= ++requestCount
-		var reqIdStr= (reqId).toString(32)
+		if( typeof options==='function' )
+			var options= {callback: options}
 
-		// using 16 bit / per socket
-		if( requestCount > 4294967290 )
-			requestCount= 0
-		
-		var buffer= netBuf.encode(new Buffer(JSON.stringify(obj)), 4)
+		var buffer= netBuf.encode(new Buffer(JSON.stringify(obj)), 6)
 
-		if( undefined!==callback )
-		{
-			requestCallbacks[reqIdStr]= callback
-			buffer.writeUInt32LE(reqId, 2)
-
-			if( 0!==requestTimeout )
-			{
-				requestTimeouts[reqIdStr]= setTimeout(function()
-				{
-					callback()
-					requestCallbacks[reqIdStr]= null
-					delete requestCallbacks[reqIdStr]
-					requestTimeouts[reqIdStr]= null
-					delete requestTimeouts[reqIdStr]
-					callback= null, reqId= null, reqIdStr= null
-				}, requestTimeout)
-			}
+		if( options.callback===undefined ){
+			buffer.writeUInt32BE(0, 2)
 		}
-		else{
-			buffer.writeUInt32LE(0, 2)
-			reqId= null, reqIdStr= null
+		else
+		{
+			var reqId= ++requestCount
+
+			if( requestCount > maxRequestCount )
+				requestCount= 0
+
+			requestCallbacks[reqId]= options
+			buffer.writeUInt32BE(reqId, 2)
+
+			var timeout= options.timeout!==undefined? options.timeout: requestTimeout
+			if( timeout )
+				requestTimeouts[reqId]= setTimeout(onTimeout, timeout, reqId)
 		}
 
 		socket.write(buffer)
-		buffer= null, obj= null
 	}
 
 	socket.on('readable', netBuf.decode(socket, function(buffer)
 	{
-		var reqId= buffer.readUInt32LE(0)
-		var reqIdStr= (reqId).toString(32)
-		clearTimeout(requestTimeouts[reqIdStr])
-		requestTimeouts[reqIdStr]= null
-		delete requestTimeouts[reqIdStr]
-		if( requestCallbacks[reqIdStr] )
-			requestCallbacks[reqIdStr]( JSON.parse(buffer.slice(4)) )
-		requestCallbacks[reqIdStr]= null
-		delete requestCallbacks[reqIdStr]
-		buffer= null, reqId= null, reqIdStr= null
+		var reqId= buffer.readUInt32BE(0)
+
+		clearTimeout(requestTimeouts[reqId])
+
+		if( requestCallbacks[reqId] )
+		{
+			if( requestCallbacks[reqId].keepCallback===undefined ){
+				requestCallbacks[reqId].callback( JSON.parse(buffer.slice(6)) )
+				gc(reqId)
+			}
+			else{
+				requestCallbacks[reqId].callback( JSON.parse(buffer.slice(6)), function(){gc(reqId)})
+			}
+		}
 	}))
 
 	return socket
