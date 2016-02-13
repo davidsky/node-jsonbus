@@ -14,7 +14,7 @@ function Server()
 			var reqId= buffer.readUInt32BE(0)
 
 			// no reqId, no reply expected
-			if( 0===reqId )
+			if( !reqId )
 				return server.emit('request', JSON.parse(buffer.slice(6).toString()) )
 
 			return server.emit('request', JSON.parse(buffer.slice(6).toString()), function(obj)
@@ -42,17 +42,11 @@ function Connect()
 		var requestTimeout= 0
 
 	var requestCount= 0
-	var requestCallbacks= {}
-	var requestTimeouts= {}
-	var structConfirmed= undefined
+	var requests= {}
 	
 	function onTimeout(reqId){
-		requestCallbacks[reqId].callback()
-		gc(reqId)
-	}
-
-	function gc(reqId){
-		requestCallbacks[reqId]= undefined
+		requests[reqId].callback()
+		delete requests[reqId]
 	}
 	
 	socket.request= function(obj, options)
@@ -72,12 +66,12 @@ function Connect()
 			if( requestCount > maxRequestCount )
 				requestCount= 0
 
-			requestCallbacks[reqId]= options
+			requests[reqId]= options
 			buffer.writeUInt32BE(reqId, 2)
 
 			var timeout= options.timeout!==undefined? options.timeout: requestTimeout
 			if( timeout )
-				requestTimeouts[reqId]= setTimeout(onTimeout, timeout, reqId)
+				requests[reqId].timeout= setTimeout(onTimeout, timeout, reqId)
 		}
 
 		socket.write(buffer)
@@ -87,16 +81,16 @@ function Connect()
 	{
 		var reqId= buffer.readUInt32BE(0)
 
-		clearTimeout(requestTimeouts[reqId])
+		clearTimeout( requests[reqId].timeout )
 
-		if( requestCallbacks[reqId] )
+		if( requests[reqId] )
 		{
-			if( requestCallbacks[reqId].keepCallback===undefined ){
-				requestCallbacks[reqId].callback( JSON.parse(buffer.slice(6)) )
-				gc(reqId)
+			if( requests[reqId].keepCallback===undefined ){
+				requests[reqId].callback( JSON.parse(buffer.slice(6)) )
+				delete requests[reqId]
 			}
 			else{
-				requestCallbacks[reqId].callback( JSON.parse(buffer.slice(6)), function(){gc(reqId)})
+				requests[reqId].callback( JSON.parse(buffer.slice(6)), function(){delete requests[reqId]})
 			}
 		}
 	}))
