@@ -1,6 +1,6 @@
 {
   "name": "jsonbus",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "fast and simple json message passing over tcp",
   "main": "index.js",
   "dependencies": {
@@ -17,6 +17,9 @@
   "keywords": [
     "json",
     "tcp",
+    "rpc",
+    "message",
+    "request",
     "net",
     "buffer"
   ],
