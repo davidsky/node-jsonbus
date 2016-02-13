@@ -1,5 +1,5 @@
 #JSONbus
-Fast and simple JSON passing over TCP with auto reconnecting client.
+Fast and simple JSON message passing over TCP with a) auto reconnecting client and b) the ability for multiple server replies.
 
 ## Server
 .createServer() accepts [default net.createServer options](https://nodejs.org/api/net.html#net_net_createserver_options_connectionlistener)
@@ -50,7 +50,7 @@ client.request({ping: 5, times: 5}, {timeout: 250, keepCallback: true, callback:
 
 
 ## Benchmarking
-Below is Mac Air 2013 results (25k send, receive, reply in a single process/core)
+Below is Mac Air 2013 results (25k send->receive->reply->receive on a single core)
 ```shell
  $ node test.js 25000
  > client sent and received 25000 responses in 0.892473207 seconds
