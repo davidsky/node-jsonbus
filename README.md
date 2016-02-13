@@ -1,15 +1,15 @@
 #JSONbus
-Fast and simple JSON message passing over TCP with a) auto reconnecting client and b) the ability for multiple server replies.
+Very fast, async and simple JSON message passing over TCP with auto reconnecting client and the ability to have multiple server responses to client's single request.
 
 ## Server
 .createServer() accepts [default net.createServer options](https://nodejs.org/api/net.html#net_net_createserver_options_connectionlistener)
 ```js
 var bus= require('jsonbus')
 var server= bus.createServer().listen(8181)
-server.on('request', function(obj, callback)
+server.on('request', function(res, callback)
 {
-	console.log(obj) // {ping: 1}
-	callback( {pong: 1} )
+	if( callback )
+		callback({pong: 1, haveMore: false})
 })
 ```
 
@@ -18,19 +18,22 @@ server.on('request', function(obj, callback)
 var bus= require('jsonbus')
 var client= bus.connect(8181)
 
-client.request({ping: 1, times: 1}, function(obj){
-	 console.log(obj) // {pong: 2}
+// no server response aka "fire and forget"
+client.request({ping: 1, times: 1})
+
+// single server response
+client.request({ping: 1, times: 1}, function(res){
+	 console.log(res)
 })
 
-var waitingForResponses= 5
-client.request({ping: 5, times: 5}, {timeout: 250, keepCallback: true, callback: function(obj, end)
+// multiple server responses
+client.request({ping: 5, times: 5}, {timeout: 250, keepCallback: true, callback: function(res, end)
 {
-	 console.log(obj)
-	 if( --waitingForResponses===0 )
+	 if( !res.haveMore)
 	 {
-		 end()
-	 	// only available if keepCallback is set to true
-	 	// used when single client request needs multiple server responses
+	 	// end() available when keepCallback= true
+	 	// use when server need to send multiple responses
+		end()
 	 }
 }})
 ```
