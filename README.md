@@ -27,11 +27,11 @@ client.request({ping: 1, times: 1}, function(res){
 })
 
 // multiple server responses
-client.request({ping: 5, times: 5}, {timeout: 250, keepCallback: true, callback: function(res, end)
+client.request({ping: 5, times: 5}, {timeout: 250, keepAlive: true, callback: function(res, end)
 {
 	 if( !res.haveMore)
 	 {
-	 	// end() available when keepCallback= true
+	 	// end() available when keepAlive= true
 	 	// use when server need to send multiple responses
 		end()
 	 }
@@ -46,9 +46,9 @@ client.request({ping: 5, times: 5}, {timeout: 250, keepCallback: true, callback:
 
 ## client.request(object, options)
 * __object__ any JSON.stringify-able object
-* __options__ a callback function or options object {callback, keepCallback, timeout}
+* __options__ a callback function or options object {callback, keepAlive, timeout}
 	* __callback__ 
-	* __keepCallback__ client must manually call the end() on server's response to cleanup requests data
+	* __keepAlive__ client must manually call the end() on server's response to cleanup requests data
 	* __timeout__ overrides .connect's requestTimeout
 
 

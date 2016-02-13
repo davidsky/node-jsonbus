@@ -85,7 +85,7 @@ function Connect()
 
 		if( requests[reqId] )
 		{
-			if( requests[reqId].keepCallback===undefined ){
+			if( requests[reqId].keepAlive===undefined ){
 				requests[reqId].callback( JSON.parse(buffer.slice(6)) )
 				delete requests[reqId]
 			}
