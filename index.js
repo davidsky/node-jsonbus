@@ -51,7 +51,9 @@ function Connect()
 	
 	socket.request= function(obj, options)
 	{
-		if( typeof options==='function' )
+		if( options===undefined )
+			var options= {}
+		else if( typeof options==='function' )
 			var options= {callback: options}
 
 		var buffer= netBuf.encode(new Buffer(JSON.stringify(obj)), 6)
