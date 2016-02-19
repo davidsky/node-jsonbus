@@ -83,10 +83,10 @@ function Connect()
 	{
 		var reqId= buffer.readUInt32BE(0)
 
-		clearTimeout( requests[reqId].timeout )
-
 		if( requests[reqId] )
 		{
+			clearTimeout( requests[reqId].timeout )
+			
 			if( requests[reqId].keepAlive===undefined ){
 				requests[reqId].callback( JSON.parse(buffer.slice(6)) )
 				delete requests[reqId]
